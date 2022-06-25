@@ -8,7 +8,8 @@ import {
   Modal,
   Timeline,
   Select,
-  message
+  message,
+  Col, Row
 } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import Highlighter from 'react-highlight-words';
@@ -31,6 +32,19 @@ const CriteriaTypeTitle = {
   Sociable: 'Hòa đồng hợp tác'
 };
 
+const CriteriaTypeColor = {
+  GoodStudy: '#2f54eb',
+  PlayHard: '#722ed1',
+  EatWellSleepWell: '#eb2f96',
+  Skillfully: '#faad14',
+  Humorous: '#b7eb8f',
+  NiceWords: '#87e8de',
+  GoodDiscipline: '#bae637',
+  Serve: '#389e0d',
+  BeautifulSingOrDancing: '#08979c',
+  Sociable: '#0050b3'
+};
+
 const { Option } = Select;
 
 const App = () => {
@@ -48,7 +62,7 @@ const App = () => {
   const [tab, setTab] = useState(null);
 
   useEffect(() => {
-    console.log('call api')
+    console.log('call api');
     axios.get(BaseUrl + '/students')
         .then(res => {
           if (res.data && res.data.data) {
@@ -218,20 +232,22 @@ const App = () => {
     }
   ];
   const showModal = (currentUser) => {
-    setVoteCriteria(null)
+    setVoteCriteria(null);
     setCurrentStudent(currentUser);
     setIsModalVisible(true);
   };
 
   const handleModalOk = () => {
     if (!voteCriteria || !currentStudent || !currentStudent.classroomId) {
-      message.error('Đã xảy ra lỗi! vui lòng thử lại sau!')
+      message.error('Đã xảy ra lỗi! vui lòng thử lại sau!');
     }
-    const {classroomId, _id: studentId } = currentStudent;
+    const { classroomId, _id: studentId } = currentStudent;
 
-    axios.post(BaseUrl + `/classrooms/${classroomId}/students/${studentId}/vote`)
+    axios.post(
+        BaseUrl + `/classrooms/${classroomId}/students/${studentId}/vote`)
         .then(() => message.success('Đã ghi nhận thành công!'))
-        .catch(() =>  message.error('Ghi nhận xảy ra lỗi! vui lòng thử lại sau!'))
+        .catch(
+            () => message.error('Ghi nhận xảy ra lỗi! vui lòng thử lại sau!'));
 
     setVoteCriteria('');
     setCurrentStudent({});
@@ -306,27 +322,39 @@ const App = () => {
       <TabPane tab="Danh Sách" key="1">
         <Table columns={columns} dataSource={students}/>
         <Modal title="Ghi nhận" visible={isModalVisible}
-               onOk={handleModalOk} onCancel={handleModalCancel} okButtonProps={{ disabled: !voteCriteria }}>
+               onOk={handleModalOk} onCancel={handleModalCancel}
+               okButtonProps={{ disabled: !voteCriteria }}
+               okText="Lưu ghi nhận"
+               cancelText="Trở về"
+        >
+          <Row>
+            <Col span={16}>
+              <div>
+                Ghi nhận cho em <b>{currentStudent.name} </b> về tiêu chí:
+              </div>
+            </Col>
+            <Col span={8}>
+              <Select
+                  placeholder="Tiêu chí ghi nhận"
+                  onChange={onCriteriaChange}
+                  allowClear
+                  value={voteCriteria || null}
+              >
+                {Object.entries(CriteriaTypeTitle)
+                    .map(([key, criteria]) => <Option
+                        value={key} key={key}>{criteria}</Option>)}
+              </Select>
+            </Col>
+          </Row>
 
-          <div>
-            Ghi nhận cho em về tiêu chí:
-          </div>
-          <Select
-              placeholder="Tiêu chí ghi nhận"
-              onChange={onCriteriaChange}
-              allowClear
-              value={voteCriteria || null}
-          >
-            {Object.entries(CriteriaTypeTitle)
-                .map(([key, criteria]) => <Option
-                    value={key}>{criteria}</Option>)}
-          </Select>
         </Modal>
       </TabPane>
       <TabPane tab="Kết Quả" key="2">
         <Table columns={votedColumns} dataSource={votedStudents}/>
         <Modal title="Lịch sử ghi nhận" visible={isVotedModalVisible}
-               onOk={handleVotedModalOk} onCancel={handleVotedModalCancel}>
+               onOk={handleVotedModalOk} onCancel={handleVotedModalCancel}
+               cancelText="Trở về"
+        >
           <VoteTimeline votes={currentVotedStudent.votes || []}/>
         </Modal>
       </TabPane>
@@ -341,12 +369,22 @@ const VoteTimeline = ({ votes }) => {
   return (
       <Timeline>
         {
-          votes.map(vote => {
-            // <Timeline.Item color="#00CCFF" dot={<SmileOutlined/>}>
-            //   <p>Custom color testing</p>
-            // </Timeline.Item>
+          votes.map((vote, index) => {
+            if (index === votes.length - 1) {
+              return (
+                  <Timeline.Item color={CriteriaTypeColor[vote.type]}
+                                 dot={<SmileOutlined/>}>
+                    Được ghi nhận về tiêu
+                    chí <b>{CriteriaTypeTitle[vote.type]}</b>
+                    {
+                        !!vote.dateTime && <span>  vào: {vote.dateTime}</span>
+                    }
+                  </Timeline.Item>
+              );
+            }
+
             return (
-                <Timeline.Item color="#002766">
+                <Timeline.Item color={CriteriaTypeColor[vote.type]}>
                   Được ghi nhận về tiêu
                   chí <b>{CriteriaTypeTitle[vote.type]}</b>
                   {
