@@ -244,7 +244,13 @@ const App = () => {
     const { classroomId, _id: studentId } = currentStudent;
 
     axios.post(
-        BaseUrl + `/classrooms/${classroomId}/students/${studentId}/vote`, { type: voteCriteria })
+        BaseUrl + `/classrooms/${classroomId}/students/${studentId}/vote`,
+        { type: voteCriteria },
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
         .then(() => message.success('Đã ghi nhận thành công!'))
         .catch(
             () => message.error('Ghi nhận xảy ra lỗi! vui lòng thử lại sau!'));

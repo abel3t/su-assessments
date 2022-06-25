@@ -27,7 +27,7 @@ and (min-device-width: 768px)
 and (max-device-width: 1024px)
 and (-webkit-min-device-pixel-ratio: 1) {
     .App .ant-tabs {
-        width: 100%;
+        width: 80%;
         padding: 10px 50px;
     }
 }
