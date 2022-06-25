@@ -1,6 +1,15 @@
 import './App.css';
 import { SearchOutlined, SmileOutlined } from '@ant-design/icons';
-import { Button, Input, Space, Table, Modal, Timeline } from 'antd';
+import {
+  Button,
+  Input,
+  Space,
+  Table,
+  Modal,
+  Timeline,
+  Select,
+  message
+} from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import Highlighter from 'react-highlight-words';
 import { Tabs } from 'antd';
@@ -22,6 +31,8 @@ const CriteriaTypeTitle = {
   Sociable: 'Hòa đồng hợp tác'
 };
 
+const { Option } = Select;
+
 const App = () => {
   const [searchText, setSearchText] = useState('');
   const [searchedColumn, setSearchedColumn] = useState('');
@@ -29,10 +40,15 @@ const App = () => {
   const [students, setStudents] = useState([]);
   const [votedStudents, setVoteStudents] = useState([]);
 
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [currentStudent, setCurrentStudent] = useState({});
   const [isVotedModalVisible, setIsVotedModalVisible] = useState(false);
   const [currentVotedStudent, setCurrentVotedStudent] = useState({});
+  const [voteCriteria, setVoteCriteria] = useState('');
+  const [tab, setTab] = useState(null);
 
   useEffect(() => {
+    console.log('call api')
     axios.get(BaseUrl + '/students')
         .then(res => {
           if (res.data && res.data.data) {
@@ -52,10 +68,14 @@ const App = () => {
         .catch(error => {
           console.log(error);
         });
-  }, []);
+  }, [tab]);
+
+  const onCriteriaChange = (value) => {
+    setVoteCriteria(value);
+  };
 
   const onChangeTab = (key) => {
-    console.log('Change to tab ', key);
+    setTab(key);
   };
 
   const handleSearch = (selectedKeys, confirm, dataIndex) => {
@@ -183,8 +203,45 @@ const App = () => {
       key: 'classroomName',
       width: '30%',
       ...getColumnSearchProps('classroomName')
+    },
+    {
+      title: 'Ghi nhận',
+      key: 'action',
+      align: 'center',
+      render: (_, record) => (
+          <Space size="middle">
+            <Button type="primary" onClick={() => showModal(record)}>
+              Ghi nhận
+            </Button>
+          </Space>
+      )
     }
   ];
+  const showModal = (currentUser) => {
+    setVoteCriteria(null)
+    setCurrentStudent(currentUser);
+    setIsModalVisible(true);
+  };
+
+  const handleModalOk = () => {
+    if (!voteCriteria || !currentStudent || !currentStudent.classroomId) {
+      message.error('Đã xảy ra lỗi! vui lòng thử lại sau!')
+    }
+    const {classroomId, _id: studentId } = currentStudent;
+
+    axios.post(BaseUrl + `/classrooms/${classroomId}/students/${studentId}/vote`)
+        .then(() => message.success('Đã ghi nhận thành công!'))
+        .catch(() =>  message.error('Ghi nhận xảy ra lỗi! vui lòng thử lại sau!'))
+
+    setVoteCriteria('');
+    setCurrentStudent({});
+    setIsModalVisible(false);
+  };
+
+  const handleModalCancel = () => {
+    setCurrentStudent({});
+    setIsModalVisible(false);
+  };
 
   const votedColumns = [
     {
@@ -218,6 +275,7 @@ const App = () => {
     {
       title: 'Chi tiết',
       key: 'action',
+      align: 'center',
       render: (_, record) => (
           <Space size="middle">
             <Button type="primary" onClick={() => showVotedModal(record)}>
@@ -242,20 +300,37 @@ const App = () => {
     setIsVotedModalVisible(false);
   };
 
-  return (<div>
+  return (<div className="App">
+    <h1>Trại Hè SU 2022</h1>
     <Tabs defaultActiveKey="1" onChange={onChangeTab}>
       <TabPane tab="Danh Sách" key="1">
         <Table columns={columns} dataSource={students}/>
+        <Modal title="Ghi nhận" visible={isModalVisible}
+               onOk={handleModalOk} onCancel={handleModalCancel} okButtonProps={{ disabled: !voteCriteria }}>
+
+          <div>
+            Ghi nhận cho em về tiêu chí:
+          </div>
+          <Select
+              placeholder="Tiêu chí ghi nhận"
+              onChange={onCriteriaChange}
+              allowClear
+              value={voteCriteria || null}
+          >
+            {Object.entries(CriteriaTypeTitle)
+                .map(([key, criteria]) => <Option
+                    value={key}>{criteria}</Option>)}
+          </Select>
+        </Modal>
       </TabPane>
       <TabPane tab="Kết Quả" key="2">
         <Table columns={votedColumns} dataSource={votedStudents}/>
+        <Modal title="Lịch sử ghi nhận" visible={isVotedModalVisible}
+               onOk={handleVotedModalOk} onCancel={handleVotedModalCancel}>
+          <VoteTimeline votes={currentVotedStudent.votes || []}/>
+        </Modal>
       </TabPane>
     </Tabs>
-
-    <Modal title="Lịch sử ghi nhận" visible={isVotedModalVisible}
-           onOk={handleVotedModalOk} onCancel={handleVotedModalCancel}>
-      <VoteTimeline votes={currentVotedStudent.votes || []}/>
-    </Modal>
   </div>);
 };
 
@@ -272,9 +347,10 @@ const VoteTimeline = ({ votes }) => {
             // </Timeline.Item>
             return (
                 <Timeline.Item color="#002766">
-                  Được ghi nhận về tiêu chí <b>{CriteriaTypeTitle[vote.type]}</b>
+                  Được ghi nhận về tiêu
+                  chí <b>{CriteriaTypeTitle[vote.type]}</b>
                   {
-                    !!vote.dateTime && <span>  vào: {vote.dateTime}</span>
+                      !!vote.dateTime && <span>  vào: {vote.dateTime}</span>
                   }
                 </Timeline.Item>);
           })
