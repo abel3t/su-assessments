@@ -15,7 +15,7 @@ import Highlighter from 'react-highlight-words';
 import { Tabs } from 'antd';
 import axios from 'axios';
 
-const BaseUrl = 'http://localhost:8080/api';
+const BaseUrl = 'https://su-api.vercel.app/api';
 const { TabPane } = Tabs;
 
 const CriteriaTypeTitle = {
