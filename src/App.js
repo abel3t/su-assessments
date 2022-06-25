@@ -244,7 +244,7 @@ const App = () => {
     const { classroomId, _id: studentId } = currentStudent;
 
     axios.post(
-        BaseUrl + `/classrooms/${classroomId}/students/${studentId}/vote`)
+        BaseUrl + `/classrooms/${classroomId}/students/${studentId}/vote`, { type: voteCriteria })
         .then(() => message.success('Đã ghi nhận thành công!'))
         .catch(
             () => message.error('Ghi nhận xảy ra lỗi! vui lòng thử lại sau!'));
