@@ -140,7 +140,7 @@ const App = () => {
         >
           <Input
               ref={searchInput}
-              placeholder={`Search ${dataIndex}`}
+              placeholder={`Tìm học sinh`}
               value={selectedKeys[0]}
               onChange={(e) => setSelectedKeys(
                   e.target.value ? [e.target.value] : [])}
@@ -298,7 +298,6 @@ const App = () => {
       title: 'Lượt bình chọn',
       dataIndex: 'totalVotes',
       key: 'totalVotes',
-      ...getColumnSearchProps('totalVotes'),
       sorter: (a, b) => a.totalVotes - b.totalVotes,
       sortDirections: ['descend', 'ascend']
     },
