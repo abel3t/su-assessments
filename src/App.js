@@ -110,6 +110,12 @@ const App = () => {
     setVoteCriteria(value);
   };
 
+
+  const handleReset = (clearFilters) => {
+    clearFilters();
+    setSearchText('');
+  };
+
   const onChangeTab = (key) => {
     setTab(key);
   };
@@ -124,6 +130,7 @@ const App = () => {
     filterDropdown: ({
       setSelectedKeys,
       selectedKeys,
+      clearFilters,
       confirm
     }) => (
         <div
@@ -144,14 +151,26 @@ const App = () => {
                 display: 'block'
               }}
           />
-          <Button
-              type="primary"
-              onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
-              icon={<SearchOutlined/>}
-              size="small"
-          >
-            Tìm Kiếm
-          </Button>
+          <Space>
+            <Button
+                onClick={() => clearFilters && handleReset(clearFilters)}
+                size="small"
+                style={{
+                  width: 90
+                }}
+            >
+              Xoá
+            </Button>
+            <Button
+                type="primary"
+                onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
+                icon={<SearchOutlined/>}
+                size="small"
+            >
+              Tìm Kiếm
+            </Button>
+          </Space>
+
         </div>
     ),
     filterIcon: (filtered) => (
