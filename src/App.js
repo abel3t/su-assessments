@@ -9,7 +9,9 @@ import {
   Timeline,
   Select,
   message,
-  Col, Row
+  Col,
+  Row,
+  Skeleton
 } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import Highlighter from 'react-highlight-words';
@@ -70,6 +72,18 @@ const App = () => {
   const [tab, setTab] = useState(null);
 
   useEffect(() => {
+    axios.get(BaseUrl + '/classrooms')
+        .then(res => {
+          if (res.data && res.data.data) {
+            setClassrooms(res.data.data);
+          }
+        })
+        .catch(error => {
+          console.log(error);
+        });
+  }, []);
+
+  useEffect(() => {
     console.log('call api');
     axios.get(BaseUrl + '/students')
         .then(res => {
@@ -85,17 +99,6 @@ const App = () => {
         .then(res => {
           if (res.data && res.data.data) {
             setVoteStudents(res.data.data);
-          }
-        })
-        .catch(error => {
-          console.log(error);
-        });
-
-
-    axios.get(BaseUrl + '/classrooms')
-        .then(res => {
-          if (res.data && res.data.data) {
-            setClassrooms(res.data.data);
           }
         })
         .catch(error => {
@@ -147,7 +150,7 @@ const App = () => {
               icon={<SearchOutlined/>}
               size="small"
           >
-            Search
+            Tìm Kiếm
           </Button>
         </div>
     ),
@@ -239,18 +242,6 @@ const App = () => {
         .catch(
             () => message.error('Ghi nhận xảy ra lỗi! vui lòng thử lại sau!'));
 
-    // axios.post(
-    //     BaseUrlV2 + `/classrooms/${classroomId}/students/${studentId}/vote`,
-    //     { type: voteCriteria },
-    //     {
-    //       headers: {
-    //         'Content-Type': 'application/json'
-    //       }
-    //     })
-    //     .then(() => message.success('Đã ghi nhận thành công!'))
-    //     .catch(
-    //         () => message.error('Ghi nhận xảy ra lỗi! vui lòng thử lại sau!'));
-
     setVoteCriteria('');
     setCurrentStudent({});
     setIsModalVisible(false);
@@ -282,7 +273,7 @@ const App = () => {
       width: '30%',
       filterMode: 'tree',
       filters: classrooms.map(classroom => ({ text: classroom.name, value: classroom._id })),
-      onFilter: (value, record) => record.classroomId.startsWith(value),
+      onFilter: (value, record) => record.classroomId?.startsWith(value)
     },
     {
       title: 'Lượt bình chọn',
@@ -324,7 +315,10 @@ const App = () => {
     <h1>Trại Hè SU 2022</h1>
     <Tabs defaultActiveKey="1" onChange={onChangeTab}>
       <TabPane tab="Danh Sách" key="1">
-        <Table columns={columns} dataSource={students}/>
+        <Skeleton loading={students.length === 0}>
+          <Table columns={columns} dataSource={students}/>
+        </Skeleton>
+
         <Modal title="Ghi nhận" visible={isModalVisible}
                onOk={handleModalOk} onCancel={handleModalCancel}
                okButtonProps={{ disabled: !voteCriteria }}
@@ -354,7 +348,9 @@ const App = () => {
         </Modal>
       </TabPane>
       <TabPane tab="Kết Quả" key="2">
+        <Skeleton loading={votedStudents.length === 0}>
         <Table columns={votedColumns} dataSource={votedStudents}/>
+        </Skeleton>
         <Modal title="Lịch sử ghi nhận" visible={isVotedModalVisible}
                onOk={handleVotedModalOk} onCancel={handleVotedModalCancel}
                cancelText="Trở về"
