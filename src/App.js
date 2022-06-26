@@ -60,6 +60,7 @@ const App = () => {
   const searchInput = useRef(null);
   const [students, setStudents] = useState([]);
   const [votedStudents, setVoteStudents] = useState([]);
+  const [classrooms, setClassrooms] = useState([]);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentStudent, setCurrentStudent] = useState({});
@@ -89,6 +90,17 @@ const App = () => {
         .catch(error => {
           console.log(error);
         });
+
+
+    axios.get(BaseUrl + '/classrooms')
+        .then(res => {
+          if (res.data && res.data.data) {
+            setClassrooms(res.data.data);
+          }
+        })
+        .catch(error => {
+          console.log(error);
+        });
   }, [tab]);
 
   const onCriteriaChange = (value) => {
@@ -105,17 +117,11 @@ const App = () => {
     setSearchedColumn(dataIndex);
   };
 
-  const handleReset = (clearFilters) => {
-    clearFilters();
-    setSearchText('');
-  };
-
   const getColumnSearchProps = (dataIndex) => ({
     filterDropdown: ({
       setSelectedKeys,
       selectedKeys,
-      confirm,
-      clearFilters
+      confirm
     }) => (
         <div
             style={{
@@ -135,41 +141,14 @@ const App = () => {
                 display: 'block'
               }}
           />
-          <Space>
-            <Button
-                type="primary"
-                onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
-                icon={<SearchOutlined/>}
-                size="small"
-                style={{
-                  width: 90
-                }}
-            >
-              Search
-            </Button>
-            <Button
-                onClick={() => clearFilters && handleReset(clearFilters)}
-                size="small"
-                style={{
-                  width: 90
-                }}
-            >
-              Reset
-            </Button>
-            <Button
-                type="link"
-                size="small"
-                onClick={() => {
-                  confirm({
-                    closeDropdown: false
-                  });
-                  setSearchText(selectedKeys[0]);
-                  setSearchedColumn(dataIndex);
-                }}
-            >
-              Filter
-            </Button>
-          </Space>
+          <Button
+              type="primary"
+              onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
+              icon={<SearchOutlined/>}
+              size="small"
+          >
+            Search
+          </Button>
         </div>
     ),
     filterIcon: (filtered) => (
@@ -223,7 +202,9 @@ const App = () => {
       dataIndex: 'classroomName',
       key: 'classroomName',
       width: '30%',
-      ...getColumnSearchProps('classroomName')
+      filterMode: 'tree',
+      filters: classrooms.map(classroom => ({ text: classroom.name, value: classroom._id })),
+      onFilter: (value, record) => record.classroomId.startsWith(value),
     },
     {
       title: 'Ghi nhận',
@@ -299,7 +280,9 @@ const App = () => {
       dataIndex: 'classroomName',
       key: 'classroomName',
       width: '30%',
-      ...getColumnSearchProps('classroomName')
+      filterMode: 'tree',
+      filters: classrooms.map(classroom => ({ text: classroom.name, value: classroom._id })),
+      onFilter: (value, record) => record.classroomId.startsWith(value),
     },
     {
       title: 'Lượt bình chọn',
@@ -391,10 +374,11 @@ const VoteTimeline = ({ votes }) => {
       <Timeline>
         {
           votes.map((vote, index) => {
+            console.log(vote.type)
             if (index === votes.length - 1) {
               return (
                   <Timeline.Item color={CriteriaTypeColor[vote.type]}
-                                 dot={<SmileOutlined/>}>
+                                 dot={<SmileOutlined/>} key={index}>
                     Được ghi nhận về tiêu
                     chí <b>{CriteriaTypeTitle[vote.type]}</b>
                     {
@@ -409,7 +393,7 @@ const VoteTimeline = ({ votes }) => {
                   Được ghi nhận về tiêu
                   chí <b>{CriteriaTypeTitle[vote.type]}</b>
                   {
-                      !!vote.dateTime && <span>  vào: {vote.dateTime}</span>
+                      !!vote.createdAt && <span> vào: <i><b>{ moment(vote.createdAt * 1000).local().format('LLLL')}</b></i></span>
                   }
                 </Timeline.Item>);
           })
