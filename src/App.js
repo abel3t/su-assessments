@@ -15,8 +15,15 @@ import { useEffect, useRef, useState } from 'react';
 import Highlighter from 'react-highlight-words';
 import { Tabs } from 'antd';
 import axios from 'axios';
+import moment from 'moment';
+import vi from 'moment/locale/vi'
+
+moment.locale('vi', vi);
 
 const BaseUrl = 'https://su-api.vercel.app/api';
+const BaseUrlV2 = 'https://su-apis-v2.vercel.app/api';
+// const BaseUrl = 'http://localhost:8080/api';
+
 const { TabPane } = Tabs;
 
 const CriteriaTypeTitle = {
@@ -243,17 +250,25 @@ const App = () => {
     }
     const { classroomId, _id: studentId } = currentStudent;
 
-    axios.post(
-        BaseUrl + `/classrooms/${classroomId}/students/${studentId}/vote`,
-        { type: voteCriteria },
-        {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        })
+    axios({
+      method: 'POST',
+      url: BaseUrlV2 + `/classrooms/${classroomId}/students/${studentId}/vote/${voteCriteria}`,
+    })
         .then(() => message.success('Đã ghi nhận thành công!'))
         .catch(
             () => message.error('Ghi nhận xảy ra lỗi! vui lòng thử lại sau!'));
+
+    // axios.post(
+    //     BaseUrlV2 + `/classrooms/${classroomId}/students/${studentId}/vote`,
+    //     { type: voteCriteria },
+    //     {
+    //       headers: {
+    //         'Content-Type': 'application/json'
+    //       }
+    //     })
+    //     .then(() => message.success('Đã ghi nhận thành công!'))
+    //     .catch(
+    //         () => message.error('Ghi nhận xảy ra lỗi! vui lòng thử lại sau!'));
 
     setVoteCriteria('');
     setCurrentStudent({});
@@ -383,7 +398,7 @@ const VoteTimeline = ({ votes }) => {
                     Được ghi nhận về tiêu
                     chí <b>{CriteriaTypeTitle[vote.type]}</b>
                     {
-                        !!vote.dateTime && <span>  vào: {vote.dateTime}</span>
+                        !!vote.createdAt && <span> vào: <i><b>{ moment(vote.createdAt * 1000).local().format('LLLL')}</b></i></span>
                     }
                   </Timeline.Item>
               );
