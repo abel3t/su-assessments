@@ -349,12 +349,12 @@ const App = () => {
                cancelText="Trở về"
         >
           <Row>
-            <Col span={16}>
+            <Col md={15} xs={14} sm={12}>
               <div>
                 Ghi nhận cho em <b>{currentStudent.name} </b> về tiêu chí:
               </div>
             </Col>
-            <Col span={8}>
+            <Col md={5} xs={10} sm={12}>
               <Select
                   placeholder="Tiêu chí ghi nhận"
                   onChange={onCriteriaChange}
